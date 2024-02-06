@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>MageNote</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="stylesheet.css">
+	</head>
+	<body>
+		<section class="container">
+			<header class="relative">
+				<h1>MageNote</h1>
+				<div class="noteTools">
+					<button id="backupNotes">Backup</button>
+					<button id="importNotes">Import</button>
+				</div>
+				<div id="importNotesContainer">
+					<p>
+						<strong>Warning: backup your notes before continuing.</strong>
+					</p>
+					<label for="importNotesFile">
+						<input id="importNotesFile" name="importNotesFile" type="file">
+					</label>
+					<hr>
+				</div>
+				<div id="notice"></div>
+			</header>
+			<hr>
+			<main class="relative">
+				<header>
+					<div class="inline">
+						<label for="search">
+							Search
+						</label>
+						<input id="search" name="search" type="text" size="10">
+						<button id="triggerSearch">Search</button>
+					</div>
+					<h2>Recently Updated Notes</h2>
+					<div class="noteTools">
+						<button id="createNote">Create Note</button>
+					</div>
+				</header>
+				<section id="recentNotes">
+					<p>
+						You do not have any notes.
+					</p>
+				</section>
+			</main>
+			<hr>
+			<footer>
+				<small>
+					<p>
+						Note taking is localized to your browser. If you clear your data for this domain, you may lose your
+						notes. Be sure to backup often.
+					</p>
+					<p>
+						Speech recognition through the Web Speech API requires access to the Internet to process your voice.
+						Each browser implements this service differently.
+					</p>
+					<p>
+						<a href="https://wiki.mozilla.org/Web_Speech_API_-_Speech_Recognition#Where_does_the_audio_go.3F"
+							target="_blank" rel="noopener">
+							Learn More About Where Your Voice Goes
+						</a>
+					</p>
+					<p>
+						<a href="https://cloud.google.com/speech-to-text/docs/data-usage-faq" target="_blank" rel="noopener">
+							Google Cloud Speech-To-Text Privacy Policy
+						</a>
+					</p>
+					<p>
+						<a href="https://github.com/mookman288/MageNote" target="_blank" rel="noopener">MageNote</a> was
+						created by PxO Ink LLC.
+					</p>
+					<a id="preDeleteDatabase" href="#preDeleteDatabase">Delete All Notes</a>
+					<button id="deleteDatabase">Permanently Delete Database and All Notes</button>
+				</small>
+			</footer>
+		</section>
+		<div id="noteModalContainer">
+			<div id="noteModal" class="container">
+				<div id="noteModalForm">
+					<div class="noteTools">
+						<button id="speechRecognition">Record</button>
+						<button id="closeNote">Close</button>
+					</div>
+					<label for="note">Note</label>
+					<textarea id="note" name="" rows="10" cols="25"></textarea>
+					<button id="saveNote">Save</button>
+				</div>
+			</div>
+		</div>
+		<script src="scripts.js"></script>
+	</body>
+</html>

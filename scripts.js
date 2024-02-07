@@ -108,7 +108,8 @@ const getDb = () => {
 					deleteButton.innerText = 'Delete';
 
 					tools.append(editButton);
-					//tools.append(deleteButton);
+					tools.append(document.createElement('hr')); //Add a horizontal rule betweeen buttons.
+					tools.append(deleteButton);
 
 					//nl2br
 					content.innerHTML = record.note.replace(/([^>\r\n]?)(\r\n|\n\r|\r|\n)/g, "<br />");
@@ -121,12 +122,13 @@ const getDb = () => {
 				});
 			}
 
-			let buttons = document.getElementsByClassName('edit');
+			let editButtons = document.getElementsByClassName('edit');
+			let deleteButtons = document.getElementsByClassName('delete');
 
 			//For all of the edit buttons, provide an interface to load the note modal for editing.
-			for (var i = 0; i < buttons.length; i++) {
+			for (var i = 0; i < editButtons.length; i++) {
 				//When the edit button is clicked.
-				buttons[i].onclick = (event) => onClick(event, () => {
+				editButtons[i].onclick = (event) => onClick(event, () => {
 					//Get the id, parsed as an integer.
 					const id = parseInt(event.srcElement.getAttribute('data-id'));
 					let storedNote;
@@ -148,6 +150,20 @@ const getDb = () => {
 					note.value = storedNote.note;
 
 					showModal();
+				});
+			}
+
+			//For all of the delete buttons, provide a confirmation dialog before deleting the note.
+			for (var i = 0; i < editButtons.length; i++) {
+				//When the delete button is clicked.
+				deleteButtons[i].onclick = (event) => onClick(event, () => {
+					if (confirm("Are you sure you want to delete this note?")) {
+						//Get the id, parsed as an integer.
+						const id = parseInt(event.srcElement.getAttribute('data-id'));
+
+						//Delete the record.
+						deleteRecord(id);
+					}
 				});
 			}
 		}
@@ -210,12 +226,12 @@ if (speechRecognition !== null) {
 	speechRecognition.maxAlternatives = 5;
 }
 
-//This function updates the IndexedDb to whatever the current notes collection is storing.
-const updateDb = () => {
+//Abstract getting the note object store.
+const getNoteObjectStore = (success) => {
 	const transaction = currentStore.transaction("notes", "readwrite");
 
 	transaction.oncomplete = (event) => {
-		notice.innerText = "Your notes have been updated.";
+		notice.innerText = success;
 	}
 
 	transaction.onerror = (event) => {
@@ -223,6 +239,23 @@ const updateDb = () => {
 	};
 
 	const noteObjectStore = transaction.objectStore("notes");
+
+	return noteObjectStore;
+}
+
+//Delete the record from the notes store.
+const deleteRecord = (id) => {
+	const noteObjectStore = getNoteObjectStore("Your note has been deleted.");
+
+	noteObjectStore.delete(id);
+
+	//Refresh the database.
+	getDb();
+}
+
+//This function updates the IndexedDb to whatever the current notes collection is storing.
+const updateDb = () => {
+	const noteObjectStore = getNoteObjectStore("Your notes have been updated.");
 
 	notes.forEach((record) => {
 		noteObjectStore.put(record);
@@ -313,7 +346,12 @@ recording.onclick = (event) => onClick(event, () => {
 document.getElementById('saveNote').onclick = (event) => onClick(event, () => {
 	let id = parseInt(note.getAttribute('name'));
 
-	id = (!id) ? notes.length + 1 : id;
+	if (!id) {
+		//https://stackoverflow.com/a/34087850
+		id = notes.reduce((previous, current) => {
+			return (previous && previous.id > current.id) ? previous : current;
+		}).id + 1;
+	}
 
 	notes.push({
 		'id': id,

@@ -187,6 +187,14 @@ footer {
 	display: inline;
 }
 
+.noteTools hr {
+	display: none;
+}
+
+.noteTools > button:not(:last-child) {
+	margin-right: 0.50rem;
+}
+
 #importNotesFile {
 	width: 100%;
 }
@@ -251,6 +259,14 @@ footer {
 		position: absolute;
 		top: 0;
 		right: 0;
+	}
+
+	.noteTools hr {
+		display: block;
+	}
+
+	.noteTools > button:not(:last-child) {
+		margin-right: 0;
 	}
 }
 

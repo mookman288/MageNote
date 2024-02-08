@@ -323,7 +323,7 @@ document.getElementById('triggerSearch').onclick = (event) => onClick(event, () 
 //This function triggers the modal to create a note, setting the values as blank.
 document.getElementById('createNote').onclick = (event) => onClick(event, () => {
 	note.setAttribute('name', '');
-	note.value = '';
+	note.value = localStorage.getItem("MageNoteActiveNote");
 
 	showModal();
 });
@@ -341,6 +341,17 @@ recording.onclick = (event) => onClick(event, () => {
 		alert("Speech Recognition is not supported in your browser.");
 	}
 });
+
+let noteTimeout;
+
+//When the user types into the note field.
+note.onkeydown = () => {
+	clearTimeout(noteTimeout);
+
+	noteTimeout = setTimeout(() => {
+		localStorage.setItem("MageNoteActiveNote", note.value);
+	}, 250);
+};
 
 //This function increments the notes collection with the new note data, overwriting previous data.
 document.getElementById('saveNote').onclick = (event) => onClick(event, () => {
@@ -360,6 +371,8 @@ document.getElementById('saveNote').onclick = (event) => onClick(event, () => {
 	});
 
 	updateDb();
+
+	localStorage.setItem("MageNoteActiveNote", '');
 
 	document.getElementById('noteModalContainer').style.display = 'none';
 });

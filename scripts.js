@@ -7,12 +7,72 @@ const sr = window.SpeechRecognition || window.webkitSpeechRecognition || window.
 //Some browsers do not support Speech Recognition at all.
 const speechRecognition = (typeof sr !== 'undefined') ? new sr() : null;
 
+//Set the language.
+let currentLanguage = "english";
+
 //Language support.
-const langs = {
+const language = {
 	'english': {
-		'lang': 'en-US'
+		'lang': 'en-US',
+		'translations': {
+			"persistentNotice": "Your browser will prune notes if storage space is limited. Backup your notes often.",
+			"backupNotice": "You haven't backed up lately. Please consider backing up soon!",
+			"deleteConfirm": "Are you sure you want to delete this note?",
+			"corruptNoticeP1": "Are you sure you want to delete this note?",
+			"corruptCTA": "click here to initialize",
+			"corruptNoticeP2": ", otherwise import your backup.",
+			"indexedDbErrorNotice": "There was an error initializing the database.",
+			"noteDeleteNotice": "Your note has been deleted.",
+			"noteUpdateNotice": "Your notes have been updated.",
+			"speechRecognitionSupportAlert": "Speech Recognition is not supported in your browser.",
+			"speechRecognitionErrorAlert": "The speech recognition service did not hear you.",
+			"speechRecognitionNoResultAlert": "The speech recognition service could not understand you.",
+			"deleteDatabaseConfirm": "Are you sure you want to delete your database and all of the notes? This action cannot be undone."
+		},
+		'onLoad': {
+			"backup": "Backup",
+			"import": "Import",
+			"importWarning": "Warning: backup your notes before continuing.",
+			"search": "Search",
+			"recentlyUpdatedNotes": "Recently Updated Notes",
+			"createNote": "Create Note",
+			"noNotes": "You do not have any notes.",
+			"noteWarning": "Note taking is localized to your browser. If you clear your data for this domain, you may lose your notes. Be sure to backup often.",
+			"speechRecognitionWarning": "Speech recognition through the Web Speech API requires access to the Internet to process your voice. Each browser implements this service differently.",
+			"whereVoiceGoes": "Learn More About Where Your Voice Goes",
+			"googlePrivacyPolicy": "Google Cloud Speech-To-Text Privacy Policy",
+			"createdBy": "was created by PxO Ink LLC",
+			"deleteAllNotes": "Delete All Notes",
+			"permanentlyDeleteAllNotes": "Permanently Delete Database and All Notes",
+			"record": "Record",
+			"close": "Close",
+			"note": "Note",
+			"save": "Save"
+		}
 	}
 };
+
+//Language selector.
+const selectLanguage = (languageValue) => {
+	if (typeof language[languageValue] !== 'undefined') {
+		currentLanguage = languageValue;
+
+		localStorage.setItem("MageNoteLanguage", currentLanguage);
+
+		console.log(languageValue, localStorage.getItem("MageNoteLanguage"));
+
+		const elements = document.querySelectorAll("[data-translate-key]");
+
+		elements.forEach((element) => {
+			const translateKey = element.getAttribute('data-translate-key');
+			const translation = language[currentLanguage].onLoad[translateKey];
+
+			if (typeof translation !== 'undefined') {
+				element.innerText = translation;
+			}
+		});
+	}
+}
 
 //The currentStore is how we're describing and accessing IndexedDB store for the application.
 let currentStore;
@@ -21,6 +81,7 @@ let currentStore;
 let notes = [];
 
 //Abstracting various HTML elements by their ID.
+const languagePicker = document.getElementById('languagePicker');
 const notice = document.getElementById('notice');
 const recentNotes = document.getElementById('recentNotes');
 const note = document.getElementById('note');
@@ -29,13 +90,31 @@ const importNotes = document.getElementById('importNotes');
 const importNotesFile = document.getElementById('importNotesFile');
 const recording = document.getElementById('speechRecognition');
 
+//If the user has chosen a different language.
+if (localStorage.getItem("MageNoteLanguage")) {
+	//Translate to that language.
+	selectLanguage(localStorage.getItem("MageNoteLanguage"));
+
+	//For each option.
+	for(let i = 0; i < languagePicker.options.length; i++) {
+		if (languagePicker.options[i].value === localStorage.getItem("MageNoteLanguage")) {
+			languagePicker.options[i].selected = 'selected';
+		}
+	}
+}
+
+languagePicker.onchange = (event) => onClick(event, () => {
+	console.log('test');
+	selectLanguage(languagePicker.value);
+});
+
 //The StorageManager is a way to instruct IndexedDB to use persistent storage, because IDB doesn't implicitly persist.
 if (navigator.storage && navigator.storage.persist) {
 	//MDN suggests that certain browsers, like Firefox, need explicit permission for persistent storage.
 	navigator.storage.persist().then(function(persistent) {
 		//We include a general notice if persistence is not available. This often pops up in Chrome.
 		if (!persistent) {
-			notice.innerText = "Your browser will prune notes if storage space is limited. Backup your notes often.";
+			notice.innerText = language[currentLanguage].translations.persistentNotice;
 		}
 	});
 }
@@ -80,7 +159,7 @@ const getDb = () => {
 
 				//If the user has not backed up in the past 5 days, provide a helpful reminder.
 				if (!lastBackedUp || (Math.floor((new Date() - Date.parse(lastBackedUp)) / 86400000)) > 5) {
-					notice.innerText = "You haven't backed up lately. Please consider backing up soon!";
+					notice.innerText = language[currentLanguage].translations.backupNotice;
 				}
 
 				//Clear the default message for the recentNotes element.
@@ -126,7 +205,7 @@ const getDb = () => {
 			let deleteButtons = document.getElementsByClassName('delete');
 
 			//For all of the edit buttons, provide an interface to load the note modal for editing.
-			for (var i = 0; i < editButtons.length; i++) {
+			for (let i = 0; i < editButtons.length; i++) {
 				//When the edit button is clicked.
 				editButtons[i].onclick = (event) => onClick(event, () => {
 					//Get the id, parsed as an integer.
@@ -154,10 +233,10 @@ const getDb = () => {
 			}
 
 			//For all of the delete buttons, provide a confirmation dialog before deleting the note.
-			for (var i = 0; i < editButtons.length; i++) {
+			for (let i = 0; i < editButtons.length; i++) {
 				//When the delete button is clicked.
 				deleteButtons[i].onclick = (event) => onClick(event, () => {
-					if (confirm("Are you sure you want to delete this note?")) {
+					if (confirm(language[currentLanguage].translations.deleteConfirm)) {
 						//Get the id, parsed as an integer.
 						const id = parseInt(event.srcElement.getAttribute('data-id'));
 
@@ -171,9 +250,9 @@ const getDb = () => {
 		//The error that is most common on Firefox is that the IndexedDB database is created, but not the notes store.
 		if (error.toString().includes('not a known object store name')) {
 			//Include a notice to the user explaining what is most likely wrong.
-			notice.innerHTML = 'Your notes are corrupted. If this is your first time using MageNote, ' +
-				'<a id="initializeDatabase" href="#initializeDatabase">' + 'click here to initialize' + '</a>' +
-				', otherwise import your backup.';
+			notice.innerHTML = language[currentLanguage].translations.corruptNoticeP1 +
+				'<a id="initializeDatabase" href="#initializeDatabase">' + language[currentLanguage].translations.corruptCTA + '</a>' +
+				language[currentLanguage].translations.corruptNoticeP2;
 
 			//Provide an outlet for the user to delete their database.
 			document.getElementById('initializeDatabase').onclick = (event) => onClick(event, () => {
@@ -187,7 +266,7 @@ const getDb = () => {
 
 //This is fired if IndexedDB tosses an error.
 indexedDb.onerror = (event) => {
-	notice.innerText = "There was an error initializing the database.";
+	notice.innerText = language[currentLanguage].translations.indexedDbErrorNotice;
 };
 
 //Set the currentStore variable to the current database store.
@@ -245,7 +324,7 @@ const getNoteObjectStore = (success) => {
 
 //Delete the record from the notes store.
 const deleteRecord = (id) => {
-	const noteObjectStore = getNoteObjectStore("Your note has been deleted.");
+	const noteObjectStore = getNoteObjectStore(language[currentLanguage].translations.noteDeleteNotice);
 
 	noteObjectStore.delete(id);
 
@@ -255,7 +334,7 @@ const deleteRecord = (id) => {
 
 //This function updates the IndexedDb to whatever the current notes collection is storing.
 const updateDb = () => {
-	const noteObjectStore = getNoteObjectStore("Your notes have been updated.");
+	const noteObjectStore = getNoteObjectStore(language[currentLanguage].translations.noteUpdateNotice);
 
 	notes.forEach((record) => {
 		noteObjectStore.put(record);
@@ -335,10 +414,10 @@ document.getElementById('closeNote').onclick = (event) => onClick(event, () => {
 //This function triggers the speech recognition API to start recording.
 recording.onclick = (event) => onClick(event, () => {
 	if (speechRecognition !== null) {
-		speechRecognition.lang = langs.english.lang;
+		speechRecognition.lang = language[currentLanguage].lang;
 		speechRecognition.start();
 	} else {
-		alert("Speech Recognition is not supported in your browser.");
+		alert(language[currentLanguage].translations.speechRecognitionSupportAlert);
 	}
 });
 
@@ -401,7 +480,7 @@ if (speechRecognition !== null) {
 	speechRecognition.onerror = (event) => {
 		//If an error is not descriptive, replace it with an explanation.
 		if (event.error.includes('no-speech')) {
-			alert("The speech recognition service did not hear you.");
+			alert(language[currentLanguage].translations.speechRecognitionErrorAlert);
 		} else {
 			alert(event.error);
 		}
@@ -409,7 +488,7 @@ if (speechRecognition !== null) {
 
 	//If there is no result, default to the ol' alert syntax with an error.
 	speechRecognition.noresult = (event) => {
-		alert("The speech recognition service could not understand you.");
+		alert(language[currentLanguage].translations.speechRecognitionNoResultAlert);
 	}
 
 	//Clean up our animations.
@@ -427,7 +506,7 @@ document.getElementById('preDeleteDatabase').onclick = (event) => onClick(event,
 
 //Include a confirmation dialog on the final database deletion step.
 document.getElementById('deleteDatabase').onclick = (event) => onClick(event, () => {
-	if (confirm('Are you sure you want to delete your database and all of the notes? This action cannot be undone.')) {
+	if (confirm(language[currentLanguage].translations.deleteDatabaseConfirm)) {
 		deleteDb();
 	}
 });

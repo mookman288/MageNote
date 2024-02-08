@@ -261,6 +261,10 @@ footer {
 		right: 0;
 	}
 
+	.noteTools > * {
+		display: inline-block;
+	}
+
 	.noteTools hr {
 		display: block;
 	}

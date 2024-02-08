@@ -280,7 +280,6 @@ footer {
 	}
 }
 
-
 /* https://codepen.io/seansean11/pen/DgGYPY */
 @keyframes pulse {
 	0% {
@@ -293,5 +292,43 @@ footer {
 
 	100% {
 		box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	body, input, textarea, select {
+		color: #FFF;
+	}
+
+	body {
+		background-color: #111;
+	}
+
+	a {
+		color: #00AAFF;
+	}
+
+	a:visited {
+		color: #AA66FF;
+	}
+
+	button {
+		background-color: #444;
+	}
+
+	button:hover {
+		background-color: #BBB;
+	}
+
+	input, textarea, select {
+		background-color: #333;
+	}
+
+	#noteModal {
+		background-color: #000;
+	}
+
+	button, input, textarea, select, #noteModal, hr, #recentNotes > div:not(:last-child) {
+		border-color: #666;
 	}
 }
